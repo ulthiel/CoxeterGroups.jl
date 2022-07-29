@@ -1,0 +1,8 @@
+name = "CoxeterGroups"
+uuid = "670e43dd-5bed-4a23-a2c5-7c7db0ec8412"
+authors = ["Ulrich Thiel <thiel@mathematik.uni-kl.de>"]
+version = "0.1.0"
+
+[deps]
+AbstractAlgebra = "c3fe647b-3220-5bb0-a1ea-a7954cac585d"
+Nemo = "2edaba10-b0f1-5616-af89-8c11ac63239a"

@@ -1,19 +1,19 @@
 # CoxeterGroups.jl
 
-A Julia package for computing in Coxeter groups (under development).
+A Julia package for computing in Coxeter groups (draft, under development).
 
 The current code is due to T. Schmit (2021) and implements the algorithm from the paper
 
 Casselman, B. (2002). Computation in Coxeter groups. I. Multiplication. *Electron. J. Combin., 9*(1), Research Paper 25, 22.
 
-Install the package with:
+## Installation
 
 ```
 julia> using Pkg
 julia> Pkg.add(url="https://github.com/ulthiel/CoxeterGroups.jl")
 ```
 
-Example:
+## Usage
 
 ```julia
 julia> using CoxeterGroups
@@ -23,3 +23,7 @@ ca
 julia> w*c
 a
 ```
+
+## Todo
+
+See [here](https://github.com/ulthiel/CoxeterGroups.jl/issues/1).

@@ -27,3 +27,11 @@ a
 ## Todo
 
 See [here](https://github.com/ulthiel/CoxeterGroups.jl/issues/1).
+
+
+## Development
+
+Checkout the code, change directory in, and start the julia shell. To run tests:
+
+    pkg> activate .
+    pkg> test

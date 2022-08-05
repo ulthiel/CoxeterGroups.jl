@@ -5,7 +5,13 @@ module CoxeterGroups
 import AbstractAlgebra: MatElem#, MatrixAlgebra
 import Nemo: matrix, ZZ, fmpz
 import Base: *,<,>
-export CoxeterGroup, CoxeterElement, setCoxeterGroup, setRelation!, getRelation, getCoxeterMatrix, getCoxeterGroup, rank
+export CoxeterGroup, CoxeterElement, setCoxeterGroup, setRelation!, getRelation, getCoxeterMatrix, getCoxeterGroup, rank, generators
+
+"Abstract supertype for Coxeter groups"
+abstract type CoxGrp end
+
+"Abstract supertype for Coxeter group elements"
+abstract type CoxElt end
 
 """
     CoxeterGroup
@@ -32,7 +38,7 @@ julia> w*c
 a
 ```
 """
-struct CoxeterGroup
+struct CoxeterGroup <: CoxGrp
     M::MatElem
     S::Array{String,1}
 
@@ -97,7 +103,7 @@ end
 A **Coxeter element** is an element of a Coxeter group. We use CoxeterElement in order to facilitate the calculation in a given Coxeter group.
 A CoxeterElement is always represented by its InverseShortLex form.
 """
-struct CoxeterElement <: AbstractArray{Int,1}
+struct CoxeterElement <: CoxElt
     G::CoxeterGroup
     w::Array{Int,1}
     """
@@ -151,6 +157,16 @@ function Base.show(io::IO, mime::MIME"text/plain", C::CoxeterGroup)
     println(io, C.S)
 end
 
+"The identity element of the Coxeter group."
+function Base.one(C::CoxeterGroup)
+    return CoxeterElement(C, Int[], true)
+end
+
+"The Coxeter generators."
+function generators(C::CoxeterGroup)
+    return [CoxeterElement(C, [i], true) for i=1:rank(C)]
+end
+
 function Base.size(w::CoxeterElement)
     return size(w.w)
 end
@@ -173,6 +189,14 @@ end
 
 function Base.copy(w::CoxeterElement)
     return CoxeterElement(w.G, copy(w.w), true)
+end
+
+function Base.:(==)(w::CoxeterElement, x::CoxeterElement)
+    return w.G == x.G && w.w == x.w
+end
+
+function Base.hash(w::CoxeterElement, h::UInt)
+    return hash(w.w, h)
 end
 
 """
@@ -340,7 +364,7 @@ function NF!(s::Int, w::CoxeterElement)
         r = r + 1
         if c >= σ
             σ = c
-            t = Exchange(s, CoxeterElement(w.G, w[l:r-1], true))
+            t = Exchange(s, CoxeterElement(w.G, w.w[l:r-1], true))
             if t != nothing
                 if s == w[l]
                     deleteat!(w,l)

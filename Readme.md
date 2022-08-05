@@ -40,3 +40,9 @@ To run tests, first activate the package, then run the `test` command repeatedly
 To build the documentation:
 
     julia --project=docs/  docs/make.jl
+
+You can run a local server to preview the documentation (some of the hyperlinks don't work otherwise):
+
+    python3 -m http.server --directory docs/build/ 8181
+
+and now open <http://localhost:8181/> in the browser.

@@ -1,9 +1,15 @@
 using Test
 using CoxeterGroups
 
+# Check our predicates are working.
+@test is_coxeter_matrix(Array{Int64}(undef, 0, 0))
+@test is_coxeter_matrix([1;;])
+@test !is_coxeter_matrix([2;;])
+
+
 # Construct every element of the group by right-multiplying by generators.
 # Used for some basic tests to see if the group is being constructed correctly.
-function enumerate_whole_group(G::CoxeterGroup)
+function enumerate_whole_group(G::CoxGrp)
     id = one(G)
     seen = Set([id])
     queue = [id]
@@ -25,18 +31,18 @@ function enumerate_whole_group(G::CoxeterGroup)
     return queue
 end
 
+# Test each of the different implementations
+group_constructors = [
+    coxeter_group_min,
+    CoxeterGroup,
+]
 
-# We should be able to construct the trivial group with a 0x0 Coxeter matrix.
-S1, () = CoxeterGroup(Array{Int64}(undef, 0, 0), String[])
-S1Elts = enumerate_whole_group(S1)
-@test length(S1Elts) == 1
-
-
-S2, (s,) = CoxeterGroup([1;;], ["s"])
-S2Elts = enumerate_whole_group(S2)
-@test length(S2Elts) == 2
-
-
-S3, (s, t) = CoxeterGroup([1 3; 3 1], ["s", "t"])
-S3Elts = enumerate_whole_group(S3)
-@test length(S3Elts) == 6
+# For each implementation, check they generate the correct number of elements in the symmetric group.
+for group_constructor = group_constructors
+    for rank = 0:5
+        type = coxeter_type("A", rank)
+        W, gens = group_constructor(type.gcm)
+        Welts = enumerate_whole_group(W)
+        @test length(Welts) == type.weyl_order
+    end
+end

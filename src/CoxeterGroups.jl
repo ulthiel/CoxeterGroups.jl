@@ -6,11 +6,12 @@ import AbstractAlgebra: MatElem#, MatrixAlgebra
 import Nemo: matrix, ZZ, fmpz
 import Base: *,<,>
 export CoxeterGroup, CoxeterElement, setCoxeterGroup, setRelation!, getRelation, getCoxeterMatrix, getCoxeterGroup, rank, generators
+export CoxGrp, CoxElt
 
-"Abstract supertype for Coxeter groups"
+"Abstract supertype for Coxeter groups."
 abstract type CoxGrp end
 
-"Abstract supertype for Coxeter group elements"
+"Abstract supertype for Coxeter group elements."
 abstract type CoxElt end
 
 """

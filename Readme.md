@@ -31,7 +31,12 @@ See [here](https://github.com/ulthiel/CoxeterGroups.jl/issues/1).
 
 ## Development
 
-Checkout the code, change directory in, and start the julia shell. To run tests:
+Checkout the code, change directory in, and start the julia shell.
+To run tests, first activate the package, then run the `test` command repeatedly while editing.
 
     pkg> activate .
     pkg> test
+
+To build the documentation:
+
+    julia --project=docs/  docs/make.jl

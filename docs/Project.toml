@@ -1,0 +1,3 @@
+[deps]
+CoxeterGroups = "670e43dd-5bed-4a23-a2c5-7c7db0ec8412"
+Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"

@@ -2,10 +2,26 @@
 
 module CoxeterGroups
 
-import AbstractAlgebra: MatElem#, MatrixAlgebra
-import Nemo: matrix, ZZ, fmpz
-import Base: *,<,>
-export CoxeterGroup, CoxeterElement, setCoxeterGroup, setRelation!, getRelation, getCoxeterMatrix, getCoxeterGroup, rank
+export CoxeterGroup, CoxeterElement
+
+# Abstract supertypes
+export CoxGrp, CoxElt
+
+# Group functions
+export coxeter_matrix, rank, generators
+
+# Element functions
+export is_left_descent, is_right_descent
+
+
+"""Abstract supertype for Coxeter groups."""
+abstract type CoxGrp end
+
+"""Abstract supertype for Coxeter group elements."""
+abstract type CoxElt end
+
+include("CoxeterGroupData.jl")
+include("CoxMin.jl")
 
 """
     CoxeterGroup
@@ -32,62 +48,31 @@ julia> w*c
 a
 ```
 """
-struct CoxeterGroup
-    M::MatElem
-    S::Array{String,1}
+struct CoxeterGroup <: CoxGrp
+    M::Matrix{Int64}
+    S::Vector{String}
 
-    function CoxeterGroup(M::MatElem)
+    function CoxeterGroup(M::Matrix{Int64})
+        if is_gcm(M)
+            M = gcm_to_coxeter_matrix(M)
+        end
         is_coxeter_matrix(M) || throw(ArgumentError("M has to be a Coxeter matrix"))
 
-        S = ["<"*string(i)*">" for i=1:size(M,1)]
+        S = ["<$i>" for i=1:size(M,1)]
         CG = new(M,S)
         return CG, [CoxeterElement(CG, [i], true) for i=1:length(S)]
     end
 
-    function CoxeterGroup(M::MatElem, S::Array{String, 1})
+    function CoxeterGroup(M::Matrix{Int64}, S::Array{String, 1})
+        if is_gcm(M)
+            M = gcm_to_coxeter_matrix(M)
+        end
         is_coxeter_matrix(M) || throw(ArgumentError("M has to be a Coxeter matrix"))
-        length(S)==size(M,1) || throw(ArgumentError("For M of size "*string(size(M))*", S should have length "*string(size(M,1))))
+        length(S) == size(M,1) || throw(ArgumentError("For M of size $(size(M)), S should have length $(size(M,1))"))
 
         CG = new(M,S)
         return CG, [CoxeterElement(CG, [i], true) for i=1:length(S)]
     end
-end
-
-
-"""
-    CoxeterGroup(M::Array{Int,2}, S::Array{String, 1})
-    CoxeterGroup(M::Array{Int,2})
-
-Returns a CoxeterGroup together with its generating set.
-If S is not specified, the generating set will be ["<1>","<2>","<3>",…]
-"""
-CoxeterGroup(M::Array{Int,2}, S::Array{String, 1}) = CoxeterGroup(matrix(ZZ,M), S)
-CoxeterGroup(M::Array{Int,2}) = CoxeterGroup(matrix(ZZ, M))
-
-
-"""
-    CoxeterGroup(rank::Int)
-    CoxeterGroup(rank::Int, S::Array{String,1})
-
-Returns a CoxeterGroup for the CoxeterMatrix of size rank, with 1's on the diagonal, and 2's everywhere else.
-If S is not specified, the generating set will be ["<1>", "<2>", "<3>", …]
-"""
-function CoxeterGroup(rank::Int)
-    rank>=0 || throw(ArgumentError("rank has to be positive"))
-    M = matrix(ZZ, fill(ZZ(2), rank, rank))
-    for i = 1:rank
-        M[i,i] = 1
-    end
-    return CoxeterGroup(M)
-end
-function CoxeterGroup(rank::Int, S::Array{String,1})
-    rank>=0 || throw(ArgumentError("rank has to be positive"))
-    rank==length(S) || throw(ArgumentError("S has to have length rank"))
-    M = matrix(ZZ, fill(ZZ(2), rank, rank))
-    for i = 1:rank
-        M[i,i] = 1
-    end
-    return CoxeterGroup(M, S)
 end
 
 
@@ -97,7 +82,7 @@ end
 A **Coxeter element** is an element of a Coxeter group. We use CoxeterElement in order to facilitate the calculation in a given Coxeter group.
 A CoxeterElement is always represented by its InverseShortLex form.
 """
-struct CoxeterElement <: AbstractArray{Int,1}
+struct CoxeterElement <: CoxElt
     G::CoxeterGroup
     w::Array{Int,1}
     """
@@ -127,7 +112,7 @@ end
 
 #This function is only for convenience. It can only be called to produce the identity element
 function CoxeterElement(G::CoxeterGroup, w::Array{Any,1}, isNormal=false::Bool)
-    isempty(w) || throw(ArgumentError("w has to be of type Array{Int,1}; I received an element of type: "*string(typeof(w))))
+    isempty(w) || throw(ArgumentError("w has to be of type Array{Int,1}; I received an element of type $(typeof(w))"))
     return CoxeterElement(G, Int[], true)
 end
 
@@ -151,17 +136,17 @@ function Base.show(io::IO, mime::MIME"text/plain", C::CoxeterGroup)
     println(io, C.S)
 end
 
-function Base.size(w::CoxeterElement)
-    return size(w.w)
-end
+"""The identity element of the Coxeter group."""
+Base.one(C::CoxeterGroup) = CoxeterElement(C, Int[], true)
 
-function Base.length(w::CoxeterElement)
-    return length(w.w)
-end
+"""The Coxeter generators."""
+generators(C::CoxeterGroup) = [CoxeterElement(C, [i], true) for i=1:rank(C)]
 
-function Base.getindex(w::CoxeterElement, i::Int)
-    return getindex(w.w, i)
-end
+
+Base.length(w::CoxeterElement) = length(w.w)
+
+Base.getindex(w::CoxeterElement, i) = getindex(w.w, i)
+
 
 function Base.insert!(w::CoxeterElement, i::Int, s::Int)
     insert!(w.w, i, s)
@@ -171,16 +156,18 @@ function Base.deleteat!(w::CoxeterElement, i::Int)
     deleteat!(w.w, i)
 end
 
-function Base.copy(w::CoxeterElement)
-    return CoxeterElement(w.G, copy(w.w), true)
-end
+Base.copy(w::CoxeterElement) = CoxeterElement(w.G, copy(w.w), true)
+
+Base.:(==)(w::CoxeterElement, x::CoxeterElement) = w.G == x.G && w.w == x.w
+
+Base.hash(w::CoxeterElement, h::UInt) = hash(w.w, h)
 
 """
     <(x::CoxeterElement, y::CoxeterElement)
 
 Returns true if x<y according to the InverseShortLex ordering.
 """
-function <(x::CoxeterElement, y::CoxeterElement)
+function Base.:(<)(x::CoxeterElement, y::CoxeterElement)
     x.G.M==y.G.M || throw(ArgumentError("x and y do not belong to the same Coxeter group"))
     if length(x) < length(y)
         return true
@@ -204,7 +191,7 @@ end
 
 Returns true if x>y according to the InverseShortLex ordering.
 """
-function >(x::CoxeterElement, y::CoxeterElement)
+function Base.:(>)(x::CoxeterElement, y::CoxeterElement)
     return <(y,x)
 end
 
@@ -213,89 +200,34 @@ end
 
 The operation of the Coxeter group. Returns the CoxeterElement in InverseShortLex form of x⋅y.
 """
-function *(x::CoxeterElement, y::CoxeterElement)
+function Base.:(*)(x::CoxeterElement, y::CoxeterElement)
     x.G.M==y.G.M || throw(ArgumentError("x and y do not belong to the same Coxeter group"))
     return NF(x,y)
 end
 
 """
-    setRelation!(CG::CoxeterGroup, i::Int, j::Int, m::Int)
-
-Sets the relations m_{i,j} and m_{j,i} to m.
-Use 0 as placeholder if m_{s,t} = infinity .
-"""
-function setRelation!(CG::CoxeterGroup, i::Int, j::Int, m::Int)
-    (i<=rank(CG) && j<=rank(CG)) || throw(BoundsError("attempt to acces "*string(rank(CG))*"x"*string(rank(CG))*" Matrix at index ["*string(i)*","*string(j)*"]"))
-    m>=0 || throw(ArgumentError("m has to be positive"))
-    m==1 || i!=j || throw(ArgumentError("m_{i,i} has to equal 1"))
-    CG.M[i,j] = m
-    CG.M[j,i] = m
-end
-
-"""
-    getRelation(CG::CoxeterGroup, i::Int, j::Int, m::Int)
-
-Returns the relation m_{i,j} such that (<i><j>)^m_{i,j} = 1
-"""
-function getRelation(CG::CoxeterGroup, i::Int, j::Int)
-    (i>0 && i<=rank(CG) && j>0 && j<=rank(CG)) || throw(BoundsError("attempt to acces "*string(rank(CG))*"x"*string(rank(CG))*" Matrix at index ["*string(i)*","*string(j)*"]"))
-    return CG.M[i,j]
-end
-
-"""
-    getCoxeterMatrix(CG::CoxeterGroup)
+    coxeter_matrix(CG::CoxeterGroup)
 
 Returns the associated Coxeter matrix for CG
 """
-function getCoxeterMatrix(CG::CoxeterGroup)
-    return deepcopy(CG.M)
-end
+coxeter_matrix(CG::CoxeterGroup) = deepcopy(CG.M)
 
 """
-    getCoxeterGroup(w::CoxeterElement)
+    parent(w::CoxeterElement)
 
 Returns the Coxeter group in which w currently resides.
 """
-function getCoxeterGroup(w::CoxeterElement)
-    return w.G
-end
+Base.parent(w::CoxeterElement) = w.G
 
 """
     rank(CG::CoxeterGroup)
 
 Returns the size of the generating set for CG.
 """
-function rank(CG::CoxeterGroup)
-  return length(CG.S)
-end
+rank(CG::CoxeterGroup) = length(CG.S)
 
-"""
-    is_coxeter_matrix(M::MatElem)
 
-returns true if and only if M is a **Coxeter matrix**.
-We use 0 as placeholder if m_{s,t} = infinity
-"""
-function is_coxeter_matrix(M::MatElem)
-    #is square
-    if size(M,1) != size(M,2)
-        return false
-    end
-    #main diagonal = 1
-    for i = 1:size(M,1)
-        if M[i,i] != 1
-            return false
-        end
-    end
-    #M[i,j]=M[j,i]  and  M[i,j]≥0
-    for i = 1:size(M,1)
-        for j = 1:i-1
-            if M[i,j]!=M[j,i] || (M[i,j]<0)
-                return false
-            end
-        end
-    end
-    return true
-end
+
 
 #returns the normal form of S[x] in CG
 function NF(x::Array{Int,1}, CG::CoxeterGroup)
@@ -340,7 +272,7 @@ function NF!(s::Int, w::CoxeterElement)
         r = r + 1
         if c >= σ
             σ = c
-            t = Exchange(s, CoxeterElement(w.G, w[l:r-1], true))
+            t = Exchange(s, CoxeterElement(w.G, w.w[l:r-1], true))
             if t != nothing
                 if s == w[l]
                     deleteat!(w,l)
@@ -393,9 +325,9 @@ function Exchange(s::Int, w::CoxeterElement)
             end
             ω = NF(vcat(w[1], s, w[1:m-1]), CoxeterElement(CG, w[m+1:n], true))
 
-            for t in ω
-                if t > ω[end]
-                    return ω[end]
+            for t in ω.w
+                if t > ω.w[end]
+                    return ω.w[end]
                 end
             end
         end

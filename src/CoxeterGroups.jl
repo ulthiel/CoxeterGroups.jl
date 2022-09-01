@@ -20,7 +20,6 @@ include("CoxeterGroupData.jl")
 include("CoxGrpMin.jl")
 include("CoxGrpSym.jl")
 include("CoxGrpRec.jl")
-include("CoxGrpRefl.jl")
 
 # Default implementations of some functions.
 

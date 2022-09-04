@@ -1,7 +1,7 @@
 # CoxMin contains the CoxGrpMin and CoxEltMin implementations which use the minimal root automaton.
-import LinearAlgebra: I, dot
+import LinearAlgebra: I
 
-export coxeter_group_min
+export CoxGrpMin, CoxEltMin, coxeter_group_min
 
 "A Coxeter group, implemented using the minimal root reflection table."
 mutable struct CoxGrpMin <: CoxGrp
@@ -35,7 +35,12 @@ struct CoxEltMin <: CoxElt
 end
 
 
-"""Create a Coxeter group from a GCM. (TODO: Allow a Coxeter matrix to be passed)."""
+"""
+    coxeter_group_min(mat) -> CoxGrpMin, gens
+
+Given a Coxeter matrix or GCM, create a Coxeter group implemented via the minimal roots automaton.
+Currently only a GCM can be passed.
+"""
 function coxeter_group_min(mat::Matrix{T}) where T <: Integer
     if !is_gcm(mat)
         throw(DomainError(mat, "Is not a generalised Cartan matrix"))
@@ -56,18 +61,59 @@ function coxeter_group_min(mat::Matrix{T}) where T <: Integer
 end
 
 
-"The generators of the Coxeter group, in order."
+"""
+    generators(W::CoxGrp)
+
+Return the simple generators of ``W``.
+"""
 generators(grp::CoxGrpMin) = [CoxEltMin(grp, [s]) for s=1:rank(grp)]
 
+"""
+    rank(W::CoxGrp) -> Integer
+
+Return the rank (number of generators) of the Coxeter group.
+"""
 rank(grp::CoxGrpMin) = size(grp.coxeter_matrix)[1]
 
-"The identity of the Coxeter group."
+"""
+    one(W::CoxGrp) -> CoxElt
+
+Return the identity in the Coxeter group ``W``.
+"""
 Base.one(grp::CoxGrpMin) = CoxEltMin(grp, [])
 
-"Check if `w` is the identity of the Coxeter group."
+"""
+    coxeter_matrix(W::CoxGrp) -> Matrix
+
+Return the Coxeter matrix for this group.
+"""
+coxeter_matrix(grp::CoxGrpMin) = copy(grp.coxeter_matrix)
+
+"""
+    is_finite(W::CoxGrp) -> Bool
+
+Return whether the group ``W`` is finite or not."""
+is_finite(grp::CoxGrpMin) = grp.is_finite
+
+"""
+    parent(w::CoxElt) -> CoxGrp
+
+Return the parent group of ``W``.
+"""
+Base.parent(w::CoxEltMin) = w.group
+
+"""
+    isone(w::CoxElt) -> Bool
+
+Check if ``w`` is the identity of the group.
+"""
 Base.isone(w::CoxEltMin) = length(w.word) == 0
 
-"The length of a Coxeter group element"
+"""
+    length(w::CoxElt) -> Integer
+
+The length of the group element ``w``, i.e. the number of generators in any reduced expression for ``w``.
+"""
 Base.length(w::CoxEltMin) = length(w.word)
 
 "Check equality between Coxeter group elements"
@@ -75,11 +121,22 @@ Base.:(==)(w::CoxEltMin, x::CoxEltMin) = w.word == x.word
 
 Base.hash(w::CoxEltMin, h::UInt) = hash(w.word, h)
 
+"""
+    short_lex(w::CoxElt) -> Vector{Int8}
+
+Return the `ShortLex` normal form of ``w``, meaning the lexicographically least reduced expression.
+"""
+short_lex(w::CoxEltMin) = copy(w.word)
+
 "Print a Coxeter group element in ShortLex normal form"
 #Base.show(io::IO, x::CoxEltMin) = join(io, x.word)
 
-"Check whether s is a right descent of w."
-function is_right_descent(w::CoxEltMin, t::Integer)
+"""
+    is_right_descent(w::CoxElt, t::Integer) -> Bool
+
+Return true if ``t`` is a right descent of ``w``, i.e. if ``l(wt) < l(w)``.
+"""
+function is_right_descent(w::CoxEltMin, t::T) where {T <: Integer}
     if !(1 <= t <= rank(w.group))
         throw(DomainError(t, "$t is not a generator in the range [1, $(rank(w.group))]"))
     end
@@ -112,8 +169,12 @@ function is_right_descent(w::CoxEltMin, t::Integer)
     return false
 end
 
-"Check whether s is a left descent of w."
-function is_left_descent(w::CoxEltMin, t::Integer)
+"""
+    is_left_descent(t::Integer, w::CoxElt) -> Bool
+
+Return true if ``t`` is a left descent of ``w``, i.e. if ``l(tw) < l(w)``.
+"""
+function is_left_descent(t::T, w::CoxEltMin) where T <: Integer
     if !(1 <= t <= rank(w.group))
         throw(DomainError(t, "$t is not a generator in the range [1, $(rank(w.group))]"))
     end
@@ -194,7 +255,10 @@ function _mult_r!(refl::Matrix{Int64}, word::Array{UInt8}, t::UInt8)
     return
 end
 
-"The product ``wx`` of Coxeter group elements."
+"""
+    *(w, x)
+
+The product ``wx`` of Coxeter group elements."""
 function Base.:(*)(w::CoxEltMin, x::CoxEltMin)
     if w.group != x.group
         throw(ArgumentError("The elements come from different Coxeter groups"))
@@ -209,26 +273,40 @@ function Base.:(*)(w::CoxEltMin, x::CoxEltMin)
     return CoxEltMin(w.group, word)
 end
 
-# TODO: Perhaps this function should be gone, and we should require explicit conversions.
+
 """
-The product ``ws`` of Coxeter group elements, where ``s`` is the simple reflection
-numbered by ``s``.
+    right_multiply(w::CoxElt, s::Integer) -> CoxElt
+
+Return the product ``ws``, where ``s`` is the simple reflection indexed by ``s``.
 """
-function Base.:(*)(w::CoxEltMin, s::T) where T <: Integer
-    !(1 <= s <= rank(w.group)) && throw(DomainError(s, "$s is not a generator in the range [1, $(rank(w.group))]"))
+function right_multiply(w::CoxEltMin, s::T) where T <: Integer
+    1 <= s <= rank(w.group) || throw(DomainError(s, "$s is not a generator in the range [1, $(rank(w.group))]"))
     word = copy(w.word)
     _mult_r!(w.group.refl_table, word, UInt8(s))
     return CoxEltMin(w.group, word)
 end
 
+"""
+    left_multiply(s::Integer, w::CoxElt) -> CoxElt
 
-"The inverse ``w^{-1}`` of a Coxeter group element"
-function Base.inv(x::CoxEltMin)
+Return the product ``sw``, where ``s`` is the simple reflection indexed by ``s``.
+"""
+function left_multiply(s::T, w::CoxEltMin) where T <: Integer
+    1 <= s <= rank(w.group) || throw(DomainError(s, "$s is not a generator in the range [1, $(rank(w.group))]"))
+    return CoxEltMin(w.group, [UInt8(s)]) * w
+end
+
+
+"""
+    inv(w)
+
+The inverse ``w^{-1}`` of a Coxeter group element."""
+function Base.inv(w::CoxEltMin)
     refl = w.group.refl_table
     word = UInt8[]
-    sizehint!(word, length(x.word))
+    sizehint!(word, length(w.word))
 
-    for s in reverse(x.word)
+    for s in reverse(w.word)
         _mult_r!(refl, word, s)
     end
 
@@ -287,8 +365,8 @@ function create_reflection_table_gcm(gcm::Matrix{T}) where T <: Integer
             end
 
             # Calculate the pairing ⟨α_s^, roots[i]⟩ and the copairing ⟨coroots[i], α_s⟩.
-            pairing = dot(gcm[s, :], roots[i])
-            copairing = dot(coroots[i], gcm[:, s])
+            pairing = sum(gcm[s, :] .* roots[i])
+            copairing = sum(coroots[i] .* gcm[:, s])
             if pairing * copairing >= 4
                 refl[s, i] = 0
                 continue

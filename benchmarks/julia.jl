@@ -38,7 +38,11 @@ end
 # CoxGrpMin
 # For A5, took about 0.25 us per element. Magma takes about 0.20 us per element.
 # For A6, took about 0.33 us per element. Magma takes about 0.26 us per element.
-G, S = coxeter_group_min(coxeter_type("A", 4).gcm)
+#G, S = coxeter_group_min(coxeter_type("A", 4).gcm)
+
+# CoxGrpSym
+# For A6 = S7, took about 0.075 us per element.
+G, S = symmetric_group(7)
 
 Gelts = enumerate_whole_group(G)
 time = @elapsed lengthsum = multiply_all_pairs(Gelts)

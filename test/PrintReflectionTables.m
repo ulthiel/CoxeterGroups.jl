@@ -39,5 +39,18 @@ mat_353 := Matrix(Integers(), [
 ]);
 PrintReflectionTable(CoxeterGroup(GrpFPCox, mat_353));
 
+mat_rand := Matrix(Integers(), [
+    [1, 3, 4, 2, 2, 2, 2],
+    [0, 1, 3, 3, 2, 2, 2],
+    [0, 0, 1, 9, 2, 2, 2],
+    [0, 0, 0, 1, 8, 3, 2],
+    [0, 0, 0, 0, 1, 3, 2],
+    [0, 0, 0, 0, 0, 1, 5],
+    [0, 0, 0, 0, 0, 0, 1]
+]);
+for i := 1 to Nrows(mat_rand) do for j := 1 to i-1 do mat_rand[i, j] := mat_rand[j, i]; end for; end for;
+PrintReflectionTable(CoxeterGroup(GrpFPCox, mat_rand));
+
+
 
 quit;

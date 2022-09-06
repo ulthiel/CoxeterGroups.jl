@@ -9,7 +9,7 @@ end
 function buildCoxeterMatrixFromGroupType(C::Char, N::Int, isAffine::Bool)
     if C == 'A'
         if !isAffine
-            M = matrix(ZZ, fill(ZZ(2), N, N))
+            M = fill(2,N,N)
             for i = 1:N
                 M[i,i] = 1
                 if i != N

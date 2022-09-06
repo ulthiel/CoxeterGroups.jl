@@ -2,6 +2,8 @@
 
 module CoxeterGroups
 
+include("CoxeterMatrices.jl")
+
 import AbstractAlgebra: MatElem#, MatrixAlgebra
 import Nemo: matrix, ZZ, fmpz
 import Base: *,<,>

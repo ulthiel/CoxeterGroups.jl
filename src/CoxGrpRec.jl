@@ -54,6 +54,66 @@ function coxeter_group_recursive(M::Matrix{Int64})
 end
 
 """
+coxeter_group_recursive(groupType::String ...)
+
+Create a Coxeter Group based on one or more group type strings. The group is the
+direct product of all provided group types.
+
+#Examples
+```julia-repl
+julia> CG, _ = coxeter_group_recursive("A3")
+(CoxGrpRec([1 3 2; 3 1 3; 2 3 1], ["<1>", "<2>", "<3>"]), CoxEltRec[CoxEltRec(CoxGrpRec([1 3 2; 3 1 3; 2 3 1], ["<1>", "<2>", "<3>"]), [1]), CoxEltRec(CoxGrpRec([1 3 2; 3 1 3; 2 3 1], ["<1>", "<2>", "<3>"]), [2]), CoxEltRec(CoxGrpRec([1 3 2; 3 1 3; 2 3 1], ["<1>", "<2>", "<3>"]), [3])])
+
+julia> CG
+Coxeter Group with Coxeter Matrix:
+3×3 Matrix{Int64}:
+ 1  3  2
+ 3  1  3
+ 2  3  1
+and generating Set:
+["<1>", "<2>", "<3>"]
+
+```
+```julia-repl
+julia> CG, _ = coxeter_group_recursive("A3","B4")
+[1 3 2; 3 1 3; 2 3 1]
+[1 3 2 2; 3 1 3 2; 2 3 1 4; 2 2 4 1]
+(CoxGrpRec([1 3 … 2 2; 3 1 … 2 2; … ; 2 2 … 1 4; 2 2 … 4 1], ["<1>", "<2>", "<3>", "<4>", "<5>", "<6>", "<7>"]), CoxEltRec[CoxEltRec(CoxGrpRec([1 3 … 2 2; 3 1 … 2 2; … ; 2 2 … 1 4; 2 2 … 4 1], ["<1>", "<2>", "<3>", "<4>", "<5>", "<6>", "<7>"]), [1]), CoxEltRec(CoxGrpRec([1 3 … 2 2; 3 1 … 2 2; … ; 2 2 … 1 4; 2 2 … 4 1], ["<1>", "<2>", "<3>", "<4>", "<5>", "<6>", "<7>"]), [2]), CoxEltRec(CoxGrpRec([1 3 … 2 2; 3 1 … 2 2; … ; 2 2 … 1 4; 2 2 … 4 1], ["<1>", "<2>", "<3>", "<4>", "<5>", "<6>", "<7>"]), [3]), CoxEltRec(CoxGrpRec([1 3 … 2 2; 3 1 … 2 2; … ; 2 2 … 1 4; 2 2 … 4 1], ["<1>", "<2>", "<3>", "<4>", "<5>", "<6>", "<7>"]), [4]), CoxEltRec(CoxGrpRec([1 3 … 2 2; 3 1 … 2 2; … ; 2 2 … 1 4; 2 2 … 4 1], ["<1>", "<2>", "<3>", "<4>", "<5>", "<6>", "<7>"]), [5]), CoxEltRec(CoxGrpRec([1 3 … 2 2; 3 1 … 2 2; … ; 2 2 … 1 4; 2 2 … 4 1], ["<1>", "<2>", "<3>", "<4>", "<5>", "<6>", "<7>"]), [6]), CoxEltRec(CoxGrpRec([1 3 … 2 2; 3 1 … 2 2; … ; 2 2 … 1 4; 2 2 … 4 1], ["<1>", "<2>", "<3>", "<4>", "<5>", "<6>", "<7>"]), [7])])
+
+julia> CG
+Coxeter Group with Coxeter Matrix:
+7×7 Matrix{Int64}:
+ 1  3  2  2  2  2  2
+ 3  1  3  2  2  2  2
+ 2  3  1  2  2  2  2
+ 2  2  2  1  3  2  2
+ 2  2  2  3  1  3  2
+ 2  2  2  2  3  1  4
+ 2  2  2  2  2  4  1
+and generating Set:
+["<1>", "<2>", "<3>", "<4>", "<5>", "<6>", "<7>"]
+
+```
+"""
+function coxeter_group_recursive(groupType::String ...)
+    return coxeter_group_recursive([s for s in groupType])
+end
+
+function coxeter_group_recursive(S::Array{String})
+    matrix_array = Array{Matrix{Int64},1}(undef,length(S))
+    total_size = 0
+    for i in 1:length(S)
+        matrix_array[i] = coxeter_matrix_from_group_type(S[i])
+        total_size += size(matrix_array[i])[1]
+    end
+    M = matrix_array[1]
+    for i in 2:length(matrix_array)
+        M = hcat(vcat(M,fill(2,size(matrix_array[i])[1],size(M)[1])),vcat(fill(2,size(M)[1],size(matrix_array[i])[1]),matrix_array[i]))
+    end
+    return coxeter_group_recursive(M, ["<$i>" for i=1:size(M,1)])
+end
+
+"""
     CoxeterElement
 
 A **Coxeter element** is an element of a Coxeter group. We use CoxeterElement in order to facilitate the calculation in a given Coxeter group.

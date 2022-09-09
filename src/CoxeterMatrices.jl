@@ -1,12 +1,34 @@
-export CoxeterMatrix
+export coxeter_matrix_from_group_type
 
-function CoxeterMatrix(groupType::String)
-    parsedGroupType = parseCoxeterGroupType(groupType)
-    return buildCoxeterMatrixFromGroupType(parsedGroupType[1], parsedGroupType[2], parsedGroupType[3])
+"""
+    coxeter_matrix_from_group_type(groupType::String)
+
+Create a coxeter matrix for a given group type.
+
+#Example
+```julia-repl
+julia> coxeter_matrix_from_group_type("A4")
+4×4 Matrix{Int64}:
+ 1  3  2  2
+ 3  1  3  2
+ 2  3  1  3
+ 2  2  3  1
+```
+"""
+function coxeter_matrix_from_group_type(groupType::String)
+    parsedGroupType = validate_and_parse_coxeter_group_type_string(groupType)
+    return build_coxeter_matrix_from_group_type(parsedGroupType[1], parsedGroupType[2], parsedGroupType[3])
 end
 
-# Matrices constructed by diagrams in Kac's Infinite Dimensional Lie Algebras, pg. 43
-function buildCoxeterMatrixFromGroupType(C::Char, N::Int, isAffine::Bool)
+"""
+    build_coxeter_matrix_from_group_type(C::Char, N::Int, isAffine::Bool)
+
+Take a given group type letter (A through I), group type integer, and boolean flag if the group is affine. Return the 
+corresponding Coxeter Matrix, if it is possible to construct.
+
+Matrices are constructed based on the diagrams in Kac's Infinite Dimensional Lie Algebras, pg. 43
+"""
+function build_coxeter_matrix_from_group_type(C::Char, N::Int, isAffine::Bool)
     if C == 'A'
         if !isAffine
             M = fill(2,N,N)
@@ -18,21 +40,21 @@ function buildCoxeterMatrixFromGroupType(C::Char, N::Int, isAffine::Bool)
                 end
             end
         else
-            M = buildCoxeterMatrixFromGroupType('A',N+1,false)
+            M = build_coxeter_matrix_from_group_type('A',N+1,false)
             M[1,N+1] = 3
             M[N+1,1] = 3
         end
     elseif C =='B' || C == 'C'
         if !isAffine
-            M = buildCoxeterMatrixFromGroupType('A',N,false)
+            M = build_coxeter_matrix_from_group_type('A',N,false)
             if N>1
                 M[N-1,N] =4
                 M[N,N-1]=4
             else
-                error("Cannot create matrix of this size")
+                error("B and C types must be of size >=2")
             end
         else
-            M = buildCoxeterMatrixFromGroupType('B',N+1,false)
+            M = build_coxeter_matrix_from_group_type('B',N+1,false)
             if C == 'B'
                 M[1,2]=2
                 M[2,1]=2
@@ -47,15 +69,15 @@ function buildCoxeterMatrixFromGroupType(C::Char, N::Int, isAffine::Bool)
     elseif C == 'D'
         if !isAffine 
             if N<4 
-                error("Cannot create matrix of this size")
+                error("D types must be of size >=4")
             end
-            M = buildCoxeterMatrixFromGroupType('A',N,false)
+            M = build_coxeter_matrix_from_group_type('A',N,false)
             M[N-1,N]=2
             M[N,N-1]=2
             M[N-2,N]=3
             M[N,N-2]=3
         else
-            M = buildCoxeterMatrixFromGroupType('D',N+1,false)
+            M = build_coxeter_matrix_from_group_type('D',N+1,false)
             M[1,2]=2
             M[2,1]=2
             M[1,3]=3
@@ -63,7 +85,7 @@ function buildCoxeterMatrixFromGroupType(C::Char, N::Int, isAffine::Bool)
         end
     elseif C == 'E'
         if !isAffine
-            M = buildCoxeterMatrixFromGroupType('A',N,false)
+            M = build_coxeter_matrix_from_group_type('A',N,false)
             if N == 6
                 M[5,6]=2
                 M[6,5]=2
@@ -80,10 +102,10 @@ function buildCoxeterMatrixFromGroupType(C::Char, N::Int, isAffine::Bool)
                 M[5,8]=3
                 M[8,5]=3
             else
-                error("N must be 6,7 or 8")
+                error("E types must be of size 6,7 or 8")
             end
         else
-            M = buildCoxeterMatrixFromGroupType('A',N+1,false)
+            M = build_coxeter_matrix_from_group_type('A',N+1,false)
             if N == 6
                 M[5,6]=2
                 M[6,5]=2
@@ -100,56 +122,56 @@ function buildCoxeterMatrixFromGroupType(C::Char, N::Int, isAffine::Bool)
                 M[6,9]=3
                 M[9,6]=3
             else
-                error("N must be 6,7 or 8")
+                error("E~ types must be of size 6,7 or 8")
             end
         end
     elseif C == 'F'
         if !isAffine
             if N < 4
-                M = buildCoxeterMatrixFromGroupType('A',N,false)
+                M = build_coxeter_matrix_from_group_type('A',N,false)
                 M[N-2,N-1] = 4
                 M[N-1,N-2] = 4
             else
-                error("Cannot create matrix of this size")
+                error("F and F~ types must be of size >=4")
             end
         else
-            M = buildCoxeterMatrixFromGroupType('F',N+1,false)
+            M = build_coxeter_matrix_from_group_type('F',N+1,false)
         end 
     elseif C == 'G'
         if !isAffine
             if N<2
-                M = buildCoxeterMatrixFromGroupType('A',N,false)
+                M = build_coxeter_matrix_from_group_type('A',N,false)
                 M[N-1,N]=6
                 M[N,N-1]=6
             else
-                error("Cannot create matrix of this size")
+                error("G and G~ types must be of size >=2")
             end
         else
-            M = buildCoxeterMatrixFromGroupType('G',N+1,false)
+            M = build_coxeter_matrix_from_group_type('G',N+1,false)
         end
     elseif C == 'H'
         if !isAffine
             if N > 1
-                M = buildCoxeterMatrixFromGroupType('A',N,false)
+                M = build_coxeter_matrix_from_group_type('A',N,false)
                 M[1,2]=5
                 M[2,1]=5
             else
-                error("N must be >= 2")
+                error("H types must be of size >= 2")
             end
         else
-            error("H affine type not supported")
+            error("H~ type not supported")
         end
     elseif C == 'I'
         if !isAffine
             if N >= 2
-                M = buildCoxeterMatrixFromGroupType('A',2,false)
+                M = build_coxeter_matrix_from_group_type('A',2,false)
                 M[1,2]=N
                 M[2,1]=N
             else
-                error("N must be >= 2")
+                error("I types must be of size >= 2")
             end
         else
-            error("I affine type not supported")
+            error("I~ type not supported")
         end
     end
 
@@ -157,11 +179,11 @@ function buildCoxeterMatrixFromGroupType(C::Char, N::Int, isAffine::Bool)
 end
 
 """ 
-    parseCoxeterGroupType
+    parseCoxeterGroupType(groupType::String)
 
-
+Validate and parse a group type string (For example, "C5" or "A~7"). Return the parsed elements of the string.
 """
-function parseCoxeterGroupType(groupType::String)
+function validate_and_parse_coxeter_group_type_string(groupType::String)
     groupTypeRegex = r"[A-I]~?[0-9]+"
     m = match(groupTypeRegex,groupType)
     if m === nothing || length(m.match)!=length(groupType)

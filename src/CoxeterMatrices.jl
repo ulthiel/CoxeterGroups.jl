@@ -3,9 +3,10 @@ export coxeter_matrix_from_group_type
 """
     coxeter_matrix_from_group_type(groupType::String)
 
-Create a coxeter matrix for a given group type.
+Create a coxeter matrix for a given group type. Affine groups are denoted by including a '~' character
+after a letter.
 
-#Example
+#Examples
 ```julia-repl
 julia> coxeter_matrix_from_group_type("A4")
 4×4 Matrix{Int64}:
@@ -13,6 +14,16 @@ julia> coxeter_matrix_from_group_type("A4")
  3  1  3  2
  2  3  1  3
  2  2  3  1
+```
+```julia-repl
+julia> coxeter_matrix_from_group_type("D~4")
+5×5 Matrix{Int64}:
+ 1  2  3  2  2
+ 2  1  3  2  2
+ 3  3  1  3  3
+ 2  2  3  1  2
+ 2  2  3  2  1
+
 ```
 """
 function coxeter_matrix_from_group_type(groupType::String)

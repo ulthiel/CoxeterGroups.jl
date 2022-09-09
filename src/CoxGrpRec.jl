@@ -57,7 +57,8 @@ end
 coxeter_group_recursive(groupType::String ...)
 
 Create a Coxeter Group based on one or more group type strings. The group is the
-direct product of all provided group types.
+direct product of all provided group types. Affine groups are denoted by including a '~' character
+after a letter.
 
 #Examples
 ```julia-repl
@@ -94,6 +95,22 @@ and generating Set:
 ["<1>", "<2>", "<3>", "<4>", "<5>", "<6>", "<7>"]
 
 ```
+```julia-repl
+julia> CG, _ = coxeter_group_recursive("D~4")
+(CoxGrpRec([1 2 … 2 2; 2 1 … 2 2; … ; 2 2 … 1 2; 2 2 … 2 1], ["<1>", "<2>", "<3>", "<4>", "<5>"]), CoxEltRec[CoxEltRec(CoxGrpRec([1 2 … 2 2; 2 1 … 2 2; … ; 2 2 … 1 2; 2 2 … 2 1], ["<1>", "<2>", "<3>", "<4>", "<5>"]), [1]), CoxEltRec(CoxGrpRec([1 2 … 2 2; 2 1 … 2 2; … ; 2 2 … 1 2; 2 2 … 2 1], ["<1>", "<2>", "<3>", "<4>", "<5>"]), [2]), CoxEltRec(CoxGrpRec([1 2 … 2 2; 2 1 … 2 2; … ; 2 2 … 1 2; 2 2 … 2 1], ["<1>", "<2>", "<3>", "<4>", "<5>"]), [3]), CoxEltRec(CoxGrpRec([1 2 … 2 2; 2 1 … 2 2; … ; 2 2 … 1 2; 2 2 … 2 1], ["<1>", "<2>", "<3>", "<4>", "<5>"]), [4]), CoxEltRec(CoxGrpRec([1 2 … 2 2; 2 1 … 2 2; … ; 2 2 … 1 2; 2 2 … 2 1], ["<1>", "<2>", "<3>", "<4>", "<5>"]), [5])])
+
+julia> CG
+Coxeter Group with Coxeter Matrix:
+5×5 Matrix{Int64}:
+ 1  2  3  2  2
+ 2  1  3  2  2
+ 3  3  1  3  3
+ 2  2  3  1  2
+ 2  2  3  2  1
+and generating Set:
+["<1>", "<2>", "<3>", "<4>", "<5>"]
+
+```
 """
 function coxeter_group_recursive(groupType::String ...)
     return coxeter_group_recursive([s for s in groupType])
@@ -101,10 +118,8 @@ end
 
 function coxeter_group_recursive(S::Array{String})
     matrix_array = Array{Matrix{Int64},1}(undef,length(S))
-    total_size = 0
     for i in 1:length(S)
         matrix_array[i] = coxeter_matrix_from_group_type(S[i])
-        total_size += size(matrix_array[i])[1]
     end
     M = matrix_array[1]
     for i in 2:length(matrix_array)

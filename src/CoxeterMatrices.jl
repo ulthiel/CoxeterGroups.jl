@@ -41,7 +41,17 @@ Matrices are constructed based on the diagrams in Kac's Infinite Dimensional Lie
 """
 function build_coxeter_matrix_from_group_type(C::Char, N::Int, isAffine::Bool)
     if C == 'A'
-        if !isAffine
+        if isAffine
+            if N==0
+                error("A~ does not have size 0")
+            elseif N==1
+                M = build_coxeter_matrix_from_group_type('I',0,false)
+            else
+                M = build_coxeter_matrix_from_group_type('A',N+1,false)
+                M[1,N+1] = 3
+                M[N+1,1] = 3
+            end
+        else
             M = fill(2,N,N)
             for i = 1:N
                 M[i,i] = 1
@@ -50,23 +60,11 @@ function build_coxeter_matrix_from_group_type(C::Char, N::Int, isAffine::Bool)
                     M[i+1,i] = 3
                 end
             end
-        else
-            M = build_coxeter_matrix_from_group_type('A',N+1,false)
-            M[1,N+1] = 3
-            M[N+1,1] = 3
         end
     elseif C =='B' || C == 'C'
-        if !isAffine
-            M = build_coxeter_matrix_from_group_type('A',N,false)
-            if N>1
-                M[N-1,N] =4
-                M[N,N-1]=4
-            else
-                error("B and C types must be of size >=2")
-            end
-        else
+        if isAffine
             M = build_coxeter_matrix_from_group_type('B',N+1,false)
-            if C == 'B'
+            if C == 'B' && N>2
                 M[1,2]=2
                 M[2,1]=2
                 M[1,3]=3
@@ -75,47 +73,37 @@ function build_coxeter_matrix_from_group_type(C::Char, N::Int, isAffine::Bool)
                 M[1,2]=4
                 M[2,1]=4
             end
-
+        else
+            M = build_coxeter_matrix_from_group_type('A',N,false)
+            if N>1
+                M[N-1,N] =4
+                M[N,N-1]=4
+            else
+                error("B and C types must be of size >=2")
+            end
         end
     elseif C == 'D'
-        if !isAffine 
-            if N<4 
-                error("D types must be of size >=4")
-            end
-            M = build_coxeter_matrix_from_group_type('A',N,false)
-            M[N-1,N]=2
-            M[N,N-1]=2
-            M[N-2,N]=3
-            M[N,N-2]=3
-        else
+        if isAffine 
             M = build_coxeter_matrix_from_group_type('D',N+1,false)
             M[1,2]=2
             M[2,1]=2
             M[1,3]=3
             M[3,1]=3
+        else
+            if N == 2
+                M = build_coxeter_matrix_from_group_type('I',2,false)
+            elseif N>2
+                M = build_coxeter_matrix_from_group_type('A',N,false)
+                M[N-1,N]=2
+                M[N,N-1]=2
+                M[N-2,N]=3
+                M[N,N-2]=3
+            else
+                error("D types must be of size >=2")
+            end
         end
     elseif C == 'E'
-        if !isAffine
-            M = build_coxeter_matrix_from_group_type('A',N,false)
-            if N == 6
-                M[5,6]=2
-                M[6,5]=2
-                M[3,6]=3
-                M[6,3]=3
-            elseif N ==7
-                M[6,7]=2
-                M[7,6]=2
-                M[3,7]=3
-                M[7,3]=3
-            elseif N == 8
-                M[7,8]=2
-                M[8,7]=2
-                M[5,8]=3
-                M[8,5]=3
-            else
-                error("E types must be of size 6,7 or 8")
-            end
-        else
+        if isAffine
             M = build_coxeter_matrix_from_group_type('A',N+1,false)
             if N == 6
                 M[5,6]=2
@@ -135,30 +123,50 @@ function build_coxeter_matrix_from_group_type(C::Char, N::Int, isAffine::Bool)
             else
                 error("E~ types must be of size 6,7 or 8")
             end
+        else
+            M = build_coxeter_matrix_from_group_type('A',N,false)
+            if N == 6
+                M[5,6]=2
+                M[6,5]=2
+                M[3,6]=3
+                M[6,3]=3
+            elseif N ==7
+                M[6,7]=2
+                M[7,6]=2
+                M[3,7]=3
+                M[7,3]=3
+            elseif N == 8
+                M[7,8]=2
+                M[8,7]=2
+                M[5,8]=3
+                M[8,5]=3
+            else
+                error("E types must be of size 6,7 or 8")
+            end
         end
     elseif C == 'F'
-        if !isAffine
-            if N < 4
-                M = build_coxeter_matrix_from_group_type('A',N,false)
-                M[N-2,N-1] = 4
-                M[N-1,N-2] = 4
+        if N == 4
+            if isAffine
+                M = build_coxeter_matrix_from_group_type('A',5,false)
             else
-                error("F and F~ types must be of size >=4")
+                M = build_coxeter_matrix_from_group_type('A',4,false)
             end
+            M[N-2,N-1] = 4
+            M[N-1,N-2] = 4
         else
-            M = build_coxeter_matrix_from_group_type('F',N+1,false)
-        end 
+            error("F and F~ types must be of size 4")
+        end
     elseif C == 'G'
-        if !isAffine
-            if N<2
-                M = build_coxeter_matrix_from_group_type('A',N,false)
-                M[N-1,N]=6
-                M[N,N-1]=6
+        if N==2
+            if isAffine
+                M = build_coxeter_matrix_from_group_type('A',3,false)
             else
-                error("G and G~ types must be of size >=2")
+                M = build_coxeter_matrix_from_group_type('A',2,false)
             end
+            M[N-1,N]=6
+            M[N,N-1]=6
         else
-            M = build_coxeter_matrix_from_group_type('G',N+1,false)
+            error("G and G~ types must be of size 2")
         end
     elseif C == 'H'
         if !isAffine
@@ -173,16 +181,17 @@ function build_coxeter_matrix_from_group_type(C::Char, N::Int, isAffine::Bool)
             error("H~ type not supported")
         end
     elseif C == 'I'
-        if !isAffine
-            if N >= 2
+        if isAffine
+            error("I~ type not supported")
+        else
+            if N >= 2 || N==0
                 M = build_coxeter_matrix_from_group_type('A',2,false)
                 M[1,2]=N
                 M[2,1]=N
             else
-                error("I types must be of size >= 2")
+                error("I types must be of size 0 or >= 2")
             end
-        else
-            error("I~ type not supported")
+            
         end
     end
 

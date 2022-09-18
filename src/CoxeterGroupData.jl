@@ -1,6 +1,6 @@
 import LinearAlgebra: diagind
 
-export coxeter_type, is_coxeter_matrix
+export coxeter_type, is_coxeter_matrix, is_gcm, gcm_to_coxeter_matrix
 
 """
     is_coxeter_matrix(mat)
@@ -9,7 +9,7 @@ Check if an integer matrix is a Coxeter matrix. A Coxeter matrix is a square sym
 where the diagonal elements are 1, and then off-diagonal elements are in {0} ∪ {2, 3, 4, ...}. Under this convention,
 a zero represents ∞.
 """
-function is_coxeter_matrix(mat::Matrix{T}) where T <: Integer
+function is_coxeter_matrix(mat::AbstractArray{T}) where T <: Integer
     n, m = size(mat)
     return (
         n == m
@@ -30,7 +30,7 @@ matrix with integer entries, such that:
 2. All off-diagonal entries are 0 or negative, and
 3. ``a_{ij} = 0`` if and only if ``a_{ji} = 0``.
 """
-function is_gcm(mat::Matrix{T}) where T <: Integer
+function is_gcm(mat::AbstractArray{T}) where T <: Integer
     n, m = size(mat)
     return (
         n == m
@@ -45,7 +45,7 @@ end
     gcm_to_coxeter_matrix(gcm)
 
 Convert a generalised Cartan matrix to its corresponding Coxeter matrix."""
-function gcm_to_coxeter_matrix(gcm::Matrix{T}) where T <: Integer
+function gcm_to_coxeter_matrix(gcm::AbstractArray{T}) where T <: Integer
     if !is_gcm(gcm)
         throw(DomainError(gcm, "Is not a generalised Cartan matrix"))
     end
@@ -60,7 +60,7 @@ function gcm_to_coxeter_matrix(gcm::Matrix{T}) where T <: Integer
         return 0
     end
 
-    cartan_mat = map(a_to_m, gcm .* gcm)
+    cartan_mat = map(a_to_m, gcm .* transpose(gcm))
     cartan_mat[diagind(cartan_mat)] .= 1
     return cartan_mat
 end
@@ -108,4 +108,59 @@ function coxeter_type(letter::String, rank::Int)
     end
 
     throw(DomainError(letter, "Unknown letter"))
+end
+
+# These cartan_blah() functions are just temporary, so that we can test the minimal roots implementation.
+
+"""The type A GCM, for rank ≥ 0."""
+cartan_A(rank::Int) = [i==j ? 2 : abs(i-j)==1 ? -1 : 0 for i in 1:rank, j in 1:rank]
+
+"""The type B GCM, for rank ≥ 2."""
+function cartan_B(rank::Int)
+    rank >= 2 || error("The rank $rank must be at least 2 to construct type B.")
+    gcm = cartan_A(rank)
+    gcm[1, 2] = -2
+    return gcm
+end
+
+"""The type C GCM, for rank ≥ 2."""
+cartan_C(rank::Int) = cartan_B(rank)'
+
+"""The type D GCM, for rank ≥ 2."""
+function cartan_D(rank::Int)
+    rank >= 2 || error("The rank $rank must be at least 2 to construct type D.")
+    gcm = [i==j ? 2 : 0 for i in 1:rank, j in 1:rank]
+    if rank >= 3
+        gcm[1, 3] = gcm[3, 1] = -1
+        gcm[2, 3] = gcm[3, 2] = -1
+    end
+    for i in 3:rank-1
+        gcm[i, i+1] = gcm[i+1, i] = -1
+    end
+    return gcm
+end
+
+"""The type E GCM, for 6 ≤ rank ≤ 8."""
+function cartan_E(rank::Int)
+    6 <= rank <= 8 || error("The rank $rank must be between 6 and 8 inclusive for type E")
+    gcm = zeros(Int64, rank, rank)
+    gcm[1:rank-1, 1:rank-1] .= cartan_A(rank - 1)
+    gcm[3, rank] = gcm[rank, 3] = -1
+    gcm[rank, rank] = 2
+    return gcm
+end
+
+"""The type F4 GCM."""
+function cartan_F4()
+    gcm = cartan_A(4)
+    gcm[2, 3] = -2
+    return gcm
+end
+
+"""The type G2 GCM."""
+function cartan_G2()
+    return [
+         2 -3
+        -1  2
+    ]
 end

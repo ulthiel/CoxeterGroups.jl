@@ -18,6 +18,7 @@ abstract type CoxElt end
 
 include("CoxeterGroupData.jl")
 include("CoxGrpMin.jl")
+include("CoxGrpMin_ReflTable.jl")
 include("CoxGrpSym.jl")
 include("CoxGrpRec.jl")
 

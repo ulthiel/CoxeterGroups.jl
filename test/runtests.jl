@@ -58,9 +58,11 @@ end
 # the implementation of these operations is correct).
 groups = [
     coxeter_group_min(Array{Int64}(undef, 0, 0)),
-    coxeter_group_min([2;;]),
-    coxeter_group_min([2 -1; -1 2]),
-    coxeter_group_min([2 -1 0; -1 2 -1; 0 -1 2]),
+    coxeter_group_min([2;;]),                       # A1, GCM
+    coxeter_group_min([2 -1; -1 2]),                # A2, GCM
+    coxeter_group_min([2 -1 0; -1 2 -1; 0 -1 2]),   # A3, GCM
+    coxeter_group_min([1 3 2; 3 1 3; 2 3 1]),       # A3, Coxeter matrix
+    coxeter_group_min([1 5 2; 5 1 3; 2 3 1]),       # H3, Coxeter matrix
     symmetric_group(1),
     symmetric_group(2),
     symmetric_group(3),
@@ -97,3 +99,5 @@ groups = [
         @test coxelt^-2 == inv(coxelt)^2
     end
 end
+
+include("Test_CoxGrpMin_ReflTable.jl")

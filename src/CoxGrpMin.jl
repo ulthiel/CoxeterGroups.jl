@@ -1,5 +1,6 @@
 # CoxMin contains the CoxGrpMin and CoxEltMin implementations which use the minimal root automaton.
 import LinearAlgebra: I
+using SparseArrays
 
 export CoxGrpMin, CoxEltMin, coxeter_group_min
 
@@ -41,22 +42,24 @@ end
 Given a Coxeter matrix or GCM, create a Coxeter group implemented via the minimal roots automaton.
 Currently only a GCM can be passed.
 """
-function coxeter_group_min(mat::Matrix{T}) where T <: Integer
-    if !is_gcm(mat)
-        throw(DomainError(mat, "Is not a generalised Cartan matrix"))
+function coxeter_group_min(mat::AbstractArray{T}) where T <: Integer
+    # If the matrix is a GCM, use the straightforward algorithm for the reflection table.
+    if is_gcm(mat)
+        refl_table = create_reflection_table_gcm(mat)
+        coxeter_mat = gcm_to_coxeter_matrix(mat)
+    elseif is_coxeter_matrix(mat)
+        refl_table = create_reflection_table_coxeter(mat)
+        coxeter_mat = mat
+    else
+        error("The matrix passed to coxeter_group_min() is not a GCM or Coxeter matrix.")
     end
 
-    # Rank of the system.
-    n, _ = size(mat)
-
-    # Generate the minimal root reflection table using the GCM algorithm.
-    refl_table = create_reflection_table_gcm(mat)
-
-    # There are n zeros in the reflection table always, coming from the simple reflections reflecting
-    # their simple roots to negative. If there are more than n zeros, then there are some non-minimal
+    # There are rank zeros in the reflection table always, coming from the simple reflections reflecting
+    # their simple roots to negative. If there are more than rank zeros, then there are some non-minimal
     # positive roots, and the resulting group is infinite.
-    is_finite = count(x -> x == 0, refl_table) > n
-    G = CoxGrpMin(gcm_to_coxeter_matrix(mat), refl_table, is_finite)
+    rank, _ = size(coxeter_mat)
+    is_finite = count(x -> x == 0, refl_table) > rank
+    G = CoxGrpMin(coxeter_mat, refl_table, is_finite)
     return G, generators(G)
 end
 
@@ -326,10 +329,8 @@ to the simple roots, and the other indices arbitrary.
 If ``β = s(α)`` is a minimal root, then `refl_table[s, α]` stores the index of β, and otherwise `refl_table[s, α] = 0`.
 Note that `refl_table[s, s] = 0` for every simple root `s`.
 """
-function create_reflection_table_gcm(gcm::Matrix{T}) where T <: Integer
-    if !is_gcm(gcm)
-        throw(DomainError(gcm, "Not a generalised Cartan matrix"))
-    end
+function create_reflection_table_gcm(gcm::AbstractArray{T}) where T <: Integer
+    is_gcm(gcm) || error("Not a generalised Cartan matrix")
 
     # My convention for the Cartan matrix is that gcm[i, j] = ⟨α_i^, α_j⟩. Not that it particularly matters here,
     # since a transposed Cartan matrix yields the same Coxeter system.
@@ -344,20 +345,20 @@ function create_reflection_table_gcm(gcm::Matrix{T}) where T <: Integer
 
     # We will keep the roots and coroots in parallel arrays, and keep an extra dictionary mapping a root
     # to its index in this array, which will also serve as a marker for whether we have seen a root before.
-    n, _ = size(gcm)
-    id = Matrix{T}(I, n, n)
-    roots = [id[s, :] for s = 1:n]
-    coroots = [id[s, :] for s = 1:n]
-    rootidx = Dict(roots[s] => s for s = 1:n)
+    rank, _ = size(gcm)
+    id = Matrix{T}(I, rank, rank)
+    roots = [id[s, :] for s = 1:rank]
+    coroots = [id[s, :] for s = 1:rank]
+    rootidx = Dict(roots[s] => s for s = 1:rank)
 
     # The reflection table maps (s, i) to the index of s(roots[i]). If s(roots[i]) is negative (this happens
     # iff roots[i] is the simple reflection corresponding to s, iff s = i) then refl[s, i] = 0, and if
     # s(roots[i]) is no longer a minimal root, then refl[s, i] = 0.
-    refl = Dict((s, s) => 0 for s = 1:n)
+    refl = Dict((s, s) => 0 for s = 1:rank)
 
     i = 1
     while i <= length(roots)
-        for s = 1:n
+        for s = 1:rank
             # If the reflection s(roots[i]) has already been calculated, skip. This will happen once
             # for each root, since it already knows what lower reflection first created it.
             if haskey(refl, (s, i))
@@ -398,8 +399,8 @@ function create_reflection_table_gcm(gcm::Matrix{T}) where T <: Integer
     # Reassemble our reflection data into a matrix, where the rows are indexed by simple reflections
     # and the columns are indexed by roots. Iterating over all possible root indices and simple reflections
     # double-checks that we have defined all reflections.
-    refltab = zeros(Int64, n, length(roots))
-    for i = 1:length(roots), s = 1:n
+    refltab = zeros(Int64, rank, length(roots))
+    for i = 1:length(roots), s = 1:rank
         refltab[s, i] = refl[s, i]
     end
 

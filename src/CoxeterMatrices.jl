@@ -3,8 +3,9 @@ export coxeter_matrix_from_group_type
 """
     coxeter_matrix_from_group_type(groupType::String)
 
-Create a coxeter matrix for a given group type. Affine groups are denoted by including a '~' character
-after a letter.
+Create a coxeter matrix for a given group type. To denote the direct product of group types,
+enter the group types seperated by the 'x' character. Affine groups are denoted by including a '~' character
+after a letter. 
 
 #Examples
 ```julia-repl
@@ -23,18 +24,46 @@ julia> coxeter_matrix_from_group_type("D~4")
  3  3  1  3  3
  2  2  3  1  2
  2  2  3  2  1
-
+```
+```julia-repl
+julia> coxeter_matrix_from_group_type("A3 x B4")
+SubString{String}["A3", "B4"]
+7×7 Matrix{Int64}:
+ 1  3  2  2  2  2  2
+ 3  1  3  2  2  2  2
+ 2  3  1  2  2  2  2
+ 2  2  2  1  3  2  2
+ 2  2  2  3  1  3  2
+ 2  2  2  2  3  1  4
+ 2  2  2  2  2  4  1
+```
+```julia-repl
+julia> coxeter_matrix_from_group_type("I2(4)")
+2×2 Matrix{Int64}:
+ 1  4
+ 4  1
 ```
 """
 function coxeter_matrix_from_group_type(groupType::String)
-    parsedGroupType = validate_and_parse_coxeter_group_type_string(groupType)
-    return build_coxeter_matrix_from_group_type(parsedGroupType[1], parsedGroupType[2], parsedGroupType[3])
+    parsedGroupTypes = validate_and_parse_coxeter_group_type_string(groupType)
+
+    matrix_array = Array{Matrix{Int64},1}(undef,length(parsedGroupTypes))
+
+    for i in 1:length(parsedGroupTypes)
+        matrix_array[i] = build_coxeter_matrix_from_group_type(parsedGroupTypes[i]...)
+    end
+
+    M = matrix_array[1]
+    for i in 2:length(matrix_array)
+        M = hcat(vcat(M,fill(2,size(matrix_array[i])[1],size(M)[1])),vcat(fill(2,size(M)[1],size(matrix_array[i])[1]),matrix_array[i]))
+    end
+    return M
 end
 
 """
     build_coxeter_matrix_from_group_type(C::Char, N::Int, isAffine::Bool)
 
-Take a given group type letter (A through I), group type integer, and boolean flag if the group is affine. Return the 
+Take a given group type letter (A through H, or I2), group type integer, and boolean flag if the group is affine. Return the 
 corresponding Coxeter Matrix, if it is possible to construct.
 
 Matrices are constructed based on the diagrams in Kac's Infinite Dimensional Lie Algebras, pg. 43
@@ -53,13 +82,9 @@ function build_coxeter_matrix_from_group_type(C::Char, N::Int, isAffine::Bool)
             end
         else
             M = fill(2,N,N)
-            for i = 1:N
-                M[i,i] = 1
-                if i != N
-                    M[i,i+1] = 3
-                    M[i+1,i] = 3
-                end
-            end
+            M[diagind(M)] .= 1
+            M[diagind(M, 1)] .= 3
+            M[diagind(M, -1)] .= 3
         end
     elseif C =='B' || C == 'C'
         if isAffine
@@ -207,23 +232,39 @@ end
 """ 
     parseCoxeterGroupType(groupType::String)
 
-Validate and parse a group type string (For example, "C5" or "A~7"). Return the parsed elements of the string.
+Validate and parse a group type string (For example, "C5" or "A~7"). Return the parsed elements of the string as a list.
 """
 function validate_and_parse_coxeter_group_type_string(groupType::String)
-    groupTypeRegex = r"[A-I]~?[0-9]+"
-    m = match(groupTypeRegex,groupType)
-    if m === nothing || length(m.match)!=length(groupType)
-        error("Unrecognized group type $(groupType)")
+    groupTypeList = split(filter(x -> !isspace(x),groupType), "x")
+    parsedGroupTypes = []
+    for element in groupTypeList
+        groupTypeRegex = r"([A-H]~?[0-9]+)"
+        m = match(groupTypeRegex,element)
+        if m !== nothing && length(m.match)==length(element)
+            C = element[1]
+            if element[2] == '~'
+                N =  parse(Int, element[3:end])
+                isAffine = true
+            else
+                N =  parse(Int, element[2:end])
+                isAffine = false
+            end
+            push!(parsedGroupTypes,[C,N,isAffine])
+            continue   
+        end
+        groupTypeRegex = r"I2\([0-9]+\)"
+        m = match(groupTypeRegex,element)
+        if m !== nothing && length(m.match)==length(element)
+            C='I'
+            N = parse(Int,element[4:end-1])
+            isAffine=false
+            push!(parsedGroupTypes,[C,N,isAffine])
+            continue
+        end
+        error("Unrecognized group type $(element)")
+
     end
-    C = groupType[1]
-    if groupType[2] == '~'
-        N =  parse(Int, groupType[3:end])
-        isAffine = true
-    else
-        N =  parse(Int, groupType[2:end])
-        isAffine = false
-    end
-    return [C,N,isAffine]
+    return parsedGroupTypes
 end
 
 

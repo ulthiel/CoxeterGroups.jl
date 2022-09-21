@@ -140,6 +140,9 @@ matrices["G~2"] = [1  6  2;6  1  3;2  3  1]
 matrices["H2"]=[1  5;5  1]
 matrices["H3"] =[1  5  2;5  1  3;2  3  1]
 matrices["H4"] = [1  5  2  2;5  1  3  2;2  3  1  3;2  2  3  1]
+matrices["I2(0)"] = [1  0;0  1]
+matrices["I2(2)"] = [1  2;2  1]
+matrices["I2(3)"] = [1  3;3  1]
 
 @testset "Coxeter matrix generation of $group_type" for (group_type, coxeter_matrix) in matrices
     CG, _ = coxeter_group_recursive(group_type)

@@ -97,3 +97,51 @@ groups = [
         @test coxelt^-2 == inv(coxelt)^2
     end
 end
+
+matrices = Dict{String,Matrix{Int64}}()
+matrices["A0"] = Array{Int64}(undef, 0, 0)
+matrices["A1"] = [1;;]
+matrices["A2"] = [1 3;3 1]
+matrices["A3"] = [1 3 2;3 1 3;2 3 1]
+matrices["A4"] = [1 3 2 2;3 1 3 2;2 3 1 3;2 2 3 1]
+matrices["A~1"] = [1 0;0 1]
+matrices["A~2"] = [1 3 3;3 1 3;3 3 1]
+matrices["A~3"] = [1  3  2  3;3  1  3  2;2  3  1  3;3  2  3  1]
+matrices["A~4"] = [1  3  2  2  3;3  1  3  2  2;2  3  1  3  2;2  2  3  1  3;3  2  2  3  1]
+matrices["B2"] = [1  4;4  1]
+matrices["B3"] = [1  3  2;3  1  4;2  4  1]
+matrices["B4"] = [ 1  3  2  2;3  1  3  2;2  3  1  4;2  2  4  1]
+matrices["B~1"] = [1  4;4  1]
+matrices["B~2"] = [1  4  2;4  1  4;2  4  1]
+matrices["B~3"] = [1  2  3  2;2  1  3  2;3  3  1  4;2  2  4  1]
+matrices["B~4"] =[1  2  3  2  2;2  1  3  2  2;3  3  1  3  2;2  2  3  1  4;2  2  2  4  1]
+matrices["C2"] = [1  4;4  1]
+matrices["C3"] = [1  3  2;3  1  4;2  4  1]
+matrices["C4"] = [1  3  2  2;3  1  3  2;2  3  1  4;2  2  4  1]
+matrices["C~1"] = [1  4;4  1]
+matrices["C~2"] = [1  4  2;4  1  4;2  4  1]
+matrices["C~3"] = [1  4  2  2;4  1  3  2;2  3  1  4;2  2  4  1]
+matrices["C~4"] = [1  4  2  2  2;4  1  3  2  2;2  3  1  3  2;2  2  3  1  4;2  2  2  4  1]
+matrices["D2"] = [1  2;2  1]
+matrices["D3"] = [1  3  3;3  1  2;3  2  1]
+matrices["D4"] = [1  3  2  2;3  1  3  3;2  3  1  2;2  3  2  1]
+matrices["D~3"] = [1  3  2  3;3  1  3  2;2  3  1  3;3  2  3  1]
+matrices["D~4"] = [1  2  3  2  2;2  1  3  2  2;3  3  1  3  3;2  2  3  1  2;2  2  3  2  1]
+matrices["E6"]=[1  3  2  2  2  2;3  1  3  2  2  2;2  3  1  3  2  3;2  2  3  1  3  2;2  2  2  3  1  2;2  2  3  2  2  1]
+matrices["E7"]=[1  3  2  2  2  2  2;3  1  3  2  2  2  2;2  3  1  3  2  2  3;2  2  3  1  3  2  2;2  2  2  3  1  3  2;2  2  2  2  3  1  2;2  2  3  2  2  2  1]
+matrices["E8"]=[1  3  2  2  2  2  2  2;3  1  3  2  2  2  2  2;2  3  1  3  2  2  2  2;2  2  3  1  3  2  2  2;2  2  2  3  1  3  2  3;2  2  2  2  3  1  3  2;2  2  2  2  2  3  1  2;2  2  2  2  3  2  2  1]
+matrices["E~6"]=[1  3  2  2  2  2  2;3  1  3  2  2  2  2;2  3  1  3  2  3  2;2  2  3  1  3  2  2;2  2  2  3  1  2  2;2  2  3  2  2  1  3;2  2  2  2  2  3  1]
+matrices["E~7"]=[1  3  2  2  2  2  2  2;3  1  3  2  2  2  2  2;2  3  1  3  2  2  2  2;2  2  3  1  3  2  2  3;2  2  2  3  1  3  2  2;2  2  2  2  3  1  3  2;2  2  2  2  2  3  1  2;2  2  2  3  2  2  2  1]
+matrices["E~8"]=[1  3  2  2  2  2  2  2  2;3  1  3  2  2  2  2  2  2;2  3  1  3  2  2  2  2  2;2  2  3  1  3  2  2  2  2;2  2  2  3  1  3  2  2  2;2  2  2  2  3  1  3  2  3;2  2  2  2  2  3  1  3  2;2  2  2  2  2  2  3  1  2;2  2  2  2  2  3  2  2  1]
+matrices["F4"] = [1  3  2  2;3  1  4  2;2  4  1  3;2  2  3  1]
+matrices["F~4"] = [1  3  2  2  2;3  1  4  2  2;2  4  1  3  2;2  2  3  1  3;2  2  2  3  1]
+matrices["G2"]=[1  6;6  1]
+matrices["G~2"] = [1  6  2;6  1  3;2  3  1]
+matrices["H2"]=[1  5;5  1]
+matrices["H3"] =[1  5  2;5  1  3;2  3  1]
+matrices["H4"] = [1  5  2  2;5  1  3  2;2  3  1  3;2  2  3  1]
+
+@testset "Coxeter matrix generation of $group_type" for (group_type, coxeter_matrix) in matrices
+    CG, _ = coxeter_group_recursive(group_type)
+    @test all(coxeter_matrix .== CG.M)
+end

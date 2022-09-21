@@ -83,12 +83,18 @@ function build_coxeter_matrix_from_group_type(C::Char, N::Int, isAffine::Bool)
             end
         end
     elseif C == 'D'
-        if isAffine 
-            M = build_coxeter_matrix_from_group_type('D',N+1,false)
-            M[1,2]=2
-            M[2,1]=2
-            M[1,3]=3
-            M[3,1]=3
+        if isAffine
+            if N == 3
+                M = build_coxeter_matrix_from_group_type('A',N,true)
+            elseif N>3
+                M = build_coxeter_matrix_from_group_type('D',N+1,false)
+                M[1,2]=2
+                M[2,1]=2
+                M[1,3]=3
+                M[3,1]=3
+            else
+                error("D~ types must be of size >=3")
+            end
         else
             if N == 2
                 M = build_coxeter_matrix_from_group_type('I',2,false)

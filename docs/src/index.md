@@ -177,3 +177,45 @@ Complexity of operations in terms of ``n``:
 - Multiplication is ``O(n)``.
 - Calculating the sign of a permutation is ``O(n)``
 - Taking Coxeter length takes ``O(n^2)`` time (this could be improved to ``O(n \log n)`` by a standard divide-and-conquer trick to count inversions).
+
+
+## Creating Coxeter systems
+
+A *Coxeter system* is an object which stores a Coxeter matrix along with a classification into components of known type.
+Currently all finite and affine type components are classified, but anything indefinite (hyperbolic or otherwise) will be classified as `Unknown` type.
+Some properties of finite-type Coxeter systems can be inferred entirely from this classification, without having to construct a group object at all.
+For instance:
+
+```@example coxeter_system
+using CoxeterGroups
+gcm = [
+     2  -1   0   0
+    -1   2  -1   0
+     0  -2   2   0
+     0   0   0   2
+]
+cox = coxeter_system(gcm)
+cox
+```
+
+Data known purely by classification can then be queried:
+
+```@example coxeter_system
+rank(cox), coxeter_name(cox), number_of_reflections(cox), order(cox)
+```
+
+The construction methods and information methods that work with Coxeter systems is below:
+
+```@docs
+coxeter_system
+coxeter_name(::CoxeterSystem)
+rank(::CoxeterSystem)
+is_irreducible(::CoxeterSystem)
+is_finite_type(::CoxeterSystem)
+is_affine_type(::CoxeterSystem)
+order(::CoxeterSystem)
+coxeter_number(::CoxeterSystem)
+number_of_reflections(::CoxeterSystem)
+degrees(::CoxeterSystem)
+exponents(::CoxeterSystem)
+```

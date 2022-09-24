@@ -101,3 +101,4 @@ groups = [
 end
 
 include("Test_CoxGrpMin_ReflTable.jl")
+include("Test_CoxeterSystems.jl")

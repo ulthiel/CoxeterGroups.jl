@@ -152,3 +152,4 @@ matrices["I2(3)"] = [1  3;3  1]
 end
 
 include("Test_CoxGrpMin_ReflTable.jl")
+include("Test_CoxeterSystems.jl")

@@ -46,3 +46,8 @@ You can run a local server to preview the documentation (some of the hyperlinks 
     python3 -m http.server --directory docs/build/ 8181
 
 and now open <http://localhost:8181/> in the browser.
+If the documentation build is complaining about missing dependencies, then run
+
+    $ julia --project=docs/
+    julia> ]
+    pkg> resolve

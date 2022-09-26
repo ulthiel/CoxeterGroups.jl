@@ -16,6 +16,7 @@ abstract type CoxGrp end
 """The abstract supertype for Coxeter group elements."""
 abstract type CoxElt end
 
+include("CoxeterMatrices.jl")
 include("CoxeterGroupData.jl")
 include("CoxGrpMin.jl")
 include("CoxGrpMin_ReflTable.jl")

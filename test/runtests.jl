@@ -3,8 +3,8 @@ using CoxeterGroups
 
 # Check our predicates are working.
 @test is_coxeter_matrix(Array{Int64}(undef, 0, 0))
-@test is_coxeter_matrix([1;;])
-@test !is_coxeter_matrix([2;;])
+@test is_coxeter_matrix(ones(Int, 1, 1))
+@test !is_coxeter_matrix(reshape([2], 1, 1))
 
 
 # Construct every element of the group by right-multiplying by generators.
@@ -58,7 +58,7 @@ end
 # the implementation of these operations is correct).
 groups = [
     coxeter_group_min(Array{Int64}(undef, 0, 0)),
-    coxeter_group_min([2;;]),                       # A1, GCM
+    coxeter_group_min(reshape([2], 1, 1)),                       # A1, GCM
     coxeter_group_min([2 -1; -1 2]),                # A2, GCM
     coxeter_group_min([2 -1 0; -1 2 -1; 0 -1 2]),   # A3, GCM
     coxeter_group_min([1 3 2; 3 1 3; 2 3 1]),       # A3, Coxeter matrix
@@ -102,7 +102,7 @@ end
 
 matrices = Dict{String,Matrix{Int64}}()
 matrices["A0"] = Array{Int64}(undef, 0, 0)
-matrices["A1"] = [1;;]
+matrices["A1"] = ones(Int, 1, 1)
 matrices["A2"] = [1 3;3 1]
 matrices["A3"] = [1 3 2;3 1 3;2 3 1]
 matrices["A4"] = [1 3 2 2;3 1 3 2;2 3 1 3;2 2 3 1]

@@ -2,4 +2,13 @@ using Documenter
 using CoxeterGroups
 import CoxeterGroups: CoxeterSystem
 
-makedocs(sitename="CoxeterGroups.jl Documentation")
+DocMeta.setdocmeta!(CoxeterGroups, :DocTestSetup, :(using CoxeterGroups); recursive=true)
+
+makedocs(;
+    modules=[CoxeterGroups],
+    sitename="CoxeterGroups.jl"
+)
+
+deploydocs(;
+    repo="github.com/ulthiel/CoxeterGroups.jl",
+)

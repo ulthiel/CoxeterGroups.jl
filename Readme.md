@@ -1,5 +1,9 @@
 # CoxeterGroups.jl
 
+[![][docs-dev-img]][docs-dev-url]
+[![][action-img]][action-url]
+[![][codecov-img]][codecov-url]
+
 A Julia package for computing in Coxeter groups (draft, under development).
 
 ## Installation
@@ -61,3 +65,13 @@ If the documentation build is complaining about missing dependencies, then run
     $ julia --project=docs/
     julia> ]
     pkg> resolve
+
+<!-- URLS -->
+
+
+[action-img]: https://github.com/ulthiel/CoxeterGroups.jl/actions/workflows/CI.yml/badge.svg
+[action-url]: https://github.com/ulthiel/CoxeterGroups.jl/actions
+[codecov-img]: https://codecov.io/gh/ulthiel/CoxeterGroups.jl/branch/master/graph/badge.svg
+[codecov-url]: https://codecov.io/gh/ulthiel/CoxeterGroups.jl?branch=master
+[docs-dev-img]: https://img.shields.io/badge/docs-dev-blue.svg
+[docs-dev-url]: https://ulthiel.github.io/CoxeterGroups.jl/dev/

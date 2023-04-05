@@ -160,7 +160,7 @@ end
 
 function Base.show(io::IO, mime::MIME"text/plain", w::CoxEltRec)
     output = ""
-    for s in w
+    for s in w.w
         output *= w.G.S[s]
     end
     if length(w) > 0

@@ -2,10 +2,6 @@
 
 A Julia package for computing in Coxeter groups (draft, under development).
 
-The current code is due to T. Schmit (2021) and implements the algorithm from the paper
-
-Casselman, B. (2002). Computation in Coxeter groups. I. Multiplication. *Electron. J. Combin., 9*(1), Research Paper 25, 22.
-
 ## Installation
 
 ```
@@ -17,16 +13,30 @@ julia> Pkg.add(url="https://github.com/ulthiel/CoxeterGroups.jl")
 
 ```julia
 julia> using CoxeterGroups
-julia> G,(a,b,c) = CoxeterGroup([1 4 2; 4 1 3; 2 3 1], ["a", "b", "c"]);
-julia> w = a*c
-ca
-julia> w*c
-a
+
+# A Coxeter group with given Coxeter matrix (using a recursive algoritm)
+julia> W, (a,b,c) = coxeter_group_recursive([1 4 2; 4 1 3; 2 3 1], ["a", "b", "c"]);
+
+julia> a*c*a
+c
+
+# A Coxeter group for a generalized Cartan matrix (using the minimal roots algorithm)
+julia> W, (s, t) = coxeter_group_min([2 -1; -1 2]);
+
+julia> s*t*s == t*s*t
+true
 ```
 
 ## Todo
 
 See [here](https://github.com/ulthiel/CoxeterGroups.jl/issues/1).
+
+## Contributors
+
+* C. Braunstein
+* J. Gibson
+* T. Schmit
+* U. Thiel
 
 
 ## Development
